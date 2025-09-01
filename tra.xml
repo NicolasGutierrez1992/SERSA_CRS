@@ -1,0 +1,9 @@
+
+  <loginTicketRequest version="1.0">
+    <header>
+      <uniqueId>994087</uniqueId>
+      <generationTime>2025-08-22T14:57:52.905Z</generationTime>
+      <expirationTime>2025-08-22T15:08:52.905Z</expirationTime>
+    </header>
+    <service>arbccf</service>
+  </loginTicketRequest>
