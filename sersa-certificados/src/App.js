@@ -7,6 +7,8 @@ import Spinner from './Spinner';
 import ProtectedRoute from './ProtectedRoute';
 import './App.css';
 
+const BACKEND_URL = 'https://sersa-crs.onrender.com';
+
 function App() {
   const navigate = useNavigate();
   const [token, setToken] = useState('');
@@ -38,7 +40,7 @@ function App() {
                 setLoading(false);
                 return;
               }
-              const res = await fetch('/auth/login', {
+              const res = await fetch(`${BACKEND_URL}/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
@@ -72,7 +74,7 @@ function App() {
                 }
 
                 try {
-                  const res = await fetch('/api/certs', {
+                  const res = await fetch(`${BACKEND_URL}/api/certs`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': token },
                     body: JSON.stringify({ marca, modelo, numeroSerie })

@@ -7,6 +7,36 @@ const SECRET = process.env.TOKEN_SECRET || 'mi_clave_secreta';
 
 const users = [{ username: 'admin', password: bcrypt.hashSync('1234', 10) }];
 
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Login de usuario
+ *     description: Obtiene un token JWT si las credenciales son válidas.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Token JWT
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *       401:
+ *         description: Credenciales inválidas
+ */
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
