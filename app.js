@@ -1,6 +1,6 @@
 const express = require('express');
 const swaggerUi = require('swagger-ui-express');
-const swaggerSpec = require('./swagger');
+const swaggerSpec = require('./server/swagger');
 require('dotenv').config({ override: true });
 const path = require('path');
 const authRouter = require('./server/auth'); // Asegúrate de que la ruta sea correcta
