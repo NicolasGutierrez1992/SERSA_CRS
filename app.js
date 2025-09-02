@@ -14,8 +14,7 @@ const PORT = 3000;
 
 app.use(cors({
   origin: [
-    FRONT_URL,
-    BACKEND_URL // reemplaza por tu URL real de frontend en Render
+    FRONT_URL
   ]
 }));
 
