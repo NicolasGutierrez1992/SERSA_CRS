@@ -8,12 +8,13 @@ const wscertRouter = require('./server/wscert');
 const cors = require('cors');
 
 const BACKEND_URL = 'https://sersa-crs.onrender.com';
+const FRONT_URL = 'https://sersa.onrender.com';
 const app = express();
 const PORT = 3000;
 
 app.use(cors({
   origin: [
-    'http://localhost:3000',
+    FRONT_URL,
     BACKEND_URL // reemplaza por tu URL real de frontend en Render
   ]
 }));
