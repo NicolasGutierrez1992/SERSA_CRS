@@ -37,6 +37,99 @@
   }
 }
 
+body, html {
+  background: linear-gradient(135deg, #e3f0ff 0%, #f8faff 100%);
+  min-height: 100vh;
+  margin: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.main-bg {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  background: #ff6600;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5em 2em;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.navbar-logo {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  width: 120px;
+  margin-right: 1em;
+}
+
+.navbar-title {
+  font-size: 1.3em;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.navbar-menu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.navbar-link {
+  background: #ff6600;
+  color: #fff;
+  padding: 0.5em 1em;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+  border: none;
+}
+
+.navbar-link:hover {
+  background: #e65c00;
+  color: #fff;
+}
+
+.navbar-logout {
+  background: #d32f2f;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5em 1em;
+  font-weight: 500;
+  margin-left: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.navbar-logout:hover {
+  background: #b71c1c;
+}
+
+.container.card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  padding: 2.5em 2em 2em 2em;
+  max-width: 480px;
+  width: 100%;
+  margin: 6em auto 2em auto;
+}
+
 body {
   background: #f5f5f5;
   font-family: 'Segoe UI', sans-serif;
@@ -53,7 +146,7 @@ body {
 }
 
 .logo {
-  width: 160px;
+  width: 180px;
   margin-bottom: 1em;
 }
 
@@ -64,25 +157,42 @@ h2 {
 }
 
 input, select, button {
-  width: 100%;
-  padding: 0.6em;
-  margin: 0.5em 0;
   font-size: 1em;
-  border: 1px solid #ff7f27;
-  border-radius: 4px;
+  padding: 0.5em;
+  border-radius: 6px;
+  border: 1px solid #cfd8dc;
+  margin: 0.3em 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 button {
-  background-color: #ff7f27;
-  color: white;
+  background: #ff6600;
+  color: #fff;
   border: none;
   cursor: pointer;
   font-weight: 500;
-  transition: background-color 0.3s ease;
+  margin-top: 0.5em;
+  transition: background 0.2s;
 }
 
 button:hover {
-  background-color: #e86c1a;
+  background: #e65c00;
+}
+
+.nav-link, button {
+  background: #ff6600;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6em 1.2em;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.nav-link:hover, button:hover {
+  background: #e65c00;
 }
 
 .btn-outline-orange {
@@ -135,5 +245,97 @@ button:hover {
   to {
     transform: translateY(-12px);
     opacity: 0.5;
+  }
+}
+
+.title {
+  font-size: 2em;
+  font-weight: 600;
+  color: #2a4d7c;
+  margin-bottom: 1.5em;
+}
+
+.nav-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 2em;
+}
+
+.nav-link {
+  background: #2a4d7c;
+  color: #fff;
+  padding: 0.6em 1.2em;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.nav-link:hover {
+  background: #1c3556;
+}
+
+.card {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+.error {
+  color: #d32f2f;
+  background: #fff0f0;
+  border-radius: 6px;
+  padding: 0.5em;
+  margin: 0.5em 0;
+}
+
+form {
+  max-width: 480px;
+  margin: 2em auto 2em auto;
+  padding: 2em 2em 1em 2em;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  display: flex;
+  flex-direction: column;
+  gap: 1.2em;
+}
+
+input, select, textarea {
+  font-size: 1.1em;
+  padding: 0.8em;
+  border-radius: 8px;
+  border: 1px solid #cfd8dc;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 0.5em;
+}
+
+button {
+  font-size: 1.1em;
+  padding: 0.7em 1.5em;
+  border-radius: 8px;
+  margin-top: 0.5em;
+}
+
+@media (max-width: 600px) {
+  .container.card {
+    padding: 1em;
+    max-width: 98vw;
+    margin-top: 7em;
+  }
+  .logo {
+    width: 80px;
+  }
+  .navbar-title {
+    font-size: 1em;
+  }
+  form {
+    padding: 1em 0.5em;
+    max-width: 98vw;
+  }
+  input, select, textarea {
+    font-size: 1em;
+    padding: 0.6em;
   }
 }

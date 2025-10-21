@@ -2,13 +2,10 @@ const soap = require('soap');
 const fs = require('fs');
 const express = require('express');
 const router = express.Router();
-const jwt = require('jsonwebtoken');
 const {verifyToken} = require('./middleware');
 require('dotenv').config({ override: true });
 const { logearNode } = require('./wsaa');
 const { cuit, fabricante, wsCertWsdl, certPath, keyPath, wsaaUrl, service, rootPath} = require('./config');
-const { compile } = require('morgan');
-const SECRET = process.env.TOKEN_SECRET || 'mi_clave_secreta';
 
 async function renovarCertificado({ marca, modelo, numeroSerie }) {
     console.log('[renovarCertificado] INICIO');
@@ -108,23 +105,7 @@ router.post('/Certs', verifyToken, async (req, res) => {
     console.log('[POST /Certs] Solicitud recibida');
     console.log('[POST /Certs] Headers:', req.headers);
     console.log('[POST /Certs] Body:', req.body);
-
-    if (!req.headers.authorization) {
-        console.error('[POST /Certs] No autorizado: falta header Authorization');
-        return res.status(401).json({ message: 'No autorizado 1' });
-    }
-    const token = req.headers.authorization;
-    if (!token) {
-        console.error('[POST /Certs] No autorizado: token vacío');
-        return res.status(401).json({ message: 'No autorizado 2' });
-    }
-    try {
-        const decoded = jwt.verify(token, SECRET);
-        console.log('[POST /Certs] Token JWT válido:', decoded);
-    } catch (err) {
-        console.error('[POST /Certs] Token inválido:', err.message);
-        return res.status(401).json({ message: 'Token inválido 4' });
-    }
+    console.log('[POST /Certs] Usuario autenticado:', req.user);
 
     const { modelo, marca, numeroSerie } = req.body;
     if (!modelo || !marca || !numeroSerie) {
@@ -143,6 +124,58 @@ router.post('/Certs', verifyToken, async (req, res) => {
     } catch (err) {
         console.error('[POST /Certs] Error en el proceso:', err.message);
         res.status(500).json({ message: 'Error interno: ' + err.message });
+    }
+});
+
+// Obtener certificados disponibles (requiere autenticación)
+router.get('/available', verifyToken, async (req, res) => {
+    console.log('[GET /available] Solicitud de certificados disponibles');
+    
+    try {
+        // Por ahora devolvemos certificados de ejemplo
+        // En una implementación real, esto consultaría una base de datos o servicio externo
+        const certificates = [
+            {
+                id_certificado: 1,
+                nombre: 'Certificado RTI - Controlador Principal',
+                controlador_id: 'CTRL-001',
+                metadata: {
+                    size: 2048,
+                    descripcion: 'Certificado RTI para controlador principal del sistema'
+                }
+            },
+            {
+                id_certificado: 2,
+                nombre: 'Certificado RTI - Controlador Secundario',
+                controlador_id: 'CTRL-002',
+                metadata: {
+                    size: 1920,
+                    descripcion: 'Certificado RTI para controlador secundario de respaldo'
+                }
+            },
+            {
+                id_certificado: 3,
+                nombre: 'Certificado RTI - Controlador de Pruebas',
+                controlador_id: 'CTRL-TEST',
+                metadata: {
+                    size: 1536,
+                    descripcion: 'Certificado RTI para entorno de pruebas'
+                }
+            }
+        ];
+
+        res.status(200).json({ 
+            certificates,
+            total: certificates.length,
+            message: 'Certificados disponibles obtenidos exitosamente'
+        });
+
+    } catch (err) {
+        console.error('[GET /available] Error:', err.message);
+        res.status(500).json({ 
+            message: 'Error interno al obtener certificados disponibles',
+            error: err.message 
+        });
     }
 });
 

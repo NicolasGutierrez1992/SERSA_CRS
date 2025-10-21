@@ -1,0 +1,55 @@
+-- Table: public.certificados
+
+-- DROP TABLE IF EXISTS public.certificados;
+
+CREATE TABLE IF NOT EXISTS public.certificados
+(
+    id_certificado integer,
+    id_usuario integer,
+    serie text COLLATE pg_catalog."default",
+    "fechaGeneracionn" date,
+    cert text COLLATE pg_catalog."default"
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.certificados
+    OWNER to s3rs4;
+
+
+
+
+-- Table: public.roles
+
+-- DROP TABLE IF EXISTS public.roles;
+
+CREATE TABLE IF NOT EXISTS public.roles
+(
+    id_rol integer,
+    rol text COLLATE pg_catalog."default"
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.roles
+    OWNER to s3rs4;
+
+
+-- Table: public.users
+
+-- DROP TABLE IF EXISTS public.users;
+
+CREATE TABLE IF NOT EXISTS public.users
+(
+    id_usuario integer,
+    status integer,
+    id_rol integer,
+    nombre text COLLATE pg_catalog."default",
+    mail text COLLATE pg_catalog."default",
+    password text COLLATE pg_catalog."default"
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.users
+    OWNER to s3rs4;

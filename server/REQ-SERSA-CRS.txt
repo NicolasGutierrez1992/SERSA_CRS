@@ -1,0 +1,141 @@
+### Resumen ejecutivo
+Solución web para la gestión y descarga de certificados para controladores fiscales que amplía el sistema existente. Objetivos principales: soportar múltiples perfiles de usuario, controlar y auditar descargas, gestionar estados de descarga **Pendiente de Facturar** y **Facturado**, imponer límites por tipo de usuario, notificar alertas, y conservar historial de cambios y eventos. La solución debe integrarse con la lógica de descarga actual y exponer API y UI para administración y usuarios finales.
+
+---
+
+### Alcance
+- Migración/ extensión del programa web existente para añadir gestión multiusuario, control de límites y auditoría.
+- Módulos cubiertos: Autenticación y autorización, Gestión de usuarios, Descargas de certificados, Control de estados, Auditoría e historial, Notificaciones por email, Reportes y listados.
+- Integración con sistema de descarga actual reutilizando su lógica central sin cambiar comportamiento funcional de la descarga en sí.
+- No incluye: facturación automática, pasarelas de pago, ni cambios en el controlador fiscal físico.
+
+---
+
+### Perfiles de usuarios y permisos
+- **Administrador**
+  - Crear, editar, eliminar usuarios Mayorista y Distribuidor.
+  - Asignar contraseña inicial y forzar cambio en primer login.
+  - Resetear contraseñas (genera el mismo flujo de primer inicio).
+  - Cambiar estado de descargas de **Pendiente de Facturar** a **Facturado**.
+  - Ver listados completos y auditoría de cambios por cualquier administrador.
+  - Configurar límites por usuario o por rol.
+- **Mayorista**
+  - Iniciar sesión, cambiar contraseña inicial, descargar certificados, ver su historial de descargas y estados.
+  - No puede crear/editar usuarios.
+- **Distribuidor**
+  - Igual que Mayorista, con límites independientes si aplica.
+- Todos los usuarios autenticados pueden visualizar lo que descargaron y ver logs detallados de cada descarga.
+
+---
+
+### Requisitos funcionales
+1. Autenticación y seguridad
+   1. **Inicio de sesión** con email/usuario y contraseña.
+   2. **Cambio obligatorio de contraseña** en primer acceso o tras reset.
+   3. **Política de contraseñas**: mínimo 10 caracteres; al menos una mayúscula, una minúscula, un número y un carácter especial.
+   4. **Recuperación y reseteo** por administrador; reseteo obliga a cambio en el próximo login.
+   5. **Sesiones** con expiración configurable y revocación por administrador.
+
+2. Gestión de usuarios
+   1. CRUD de usuarios por administradores.
+   2. Perfil de usuario con campos: nombre, email, rol, estado (activo/inactivo), límite máximo de descargas pendientes, fecha de alta, administrador que creador, última modificación.
+   3. Exportar listado de usuarios CSV/JSON.
+
+3. Control de descargas
+   1. Interfaz para listar certificados disponibles y seleccionables para descarga.
+   2. Visualización previa antes de descargar con: nombre del certificado, controlador fiscal asociado, fecha, tamaño, checksum y mensajes de log de generación/transferencia.
+   3. Cada descarga crea un registro con estado inicial **Pendiente de Facturar** o **Facturado** según parámetros (por defecto Pendiente).
+   4. Las descargas deben poder marcarse manualmente como **Facturado** por administrador.
+   5. Historial por usuario con filtros por estado, fecha y controlador.
+
+4. Límite de descargas pendientes
+   1. Cada mayorista/distribuidor tiene un **límite configurable** de descargas con estado Pendiente de Facturar.
+   2. Si el usuario supera el límite no puede iniciar nuevas descargas hasta que el administrador reduzca su número de pendientes marcándolas como Facturado.
+   3. El sistema debe mostrar contador y alerta en UI del usuario con número de pendientes y límite.
+
+5. Auditoría y registro de cambios
+   1. Registro inmutable de acciones administrativas: creación/edición/eliminación de usuarios, cambios de límites, cambios de estado de descarga, resets de contraseña y accesos de administrador relevantes.
+   2. Cada entrada de auditoría guarda: actor, acción, objetivo, timestamp, IP y datos previos/posteriores resumidos.
+   3. Interfaz para consultar auditoría por rangos de fecha y tipo de acción.
+
+6. Notificaciones y alertas
+   1. Envío de email automático al administrador cuando un usuario alcanza el 80% y 100% de su límite de descargas pendientes.
+   2. Email al administrador cuando un usuario intenta descargar y está bloqueado por límite.
+   3. Notificaciones internas en UI (badge) para administradores con pendientes totales por usuario.
+
+7. Listados y reportes
+   1. Listado general de certificados pendientes con filtros (usuario, controlador, fecha, estado).
+   2. Exportar listados a CSV/JSON.
+   3. Panel de control con métricas: descargas por día, pendienes por usuario, top mayoristas/distribuidores por volumen.
+
+8. Logs de descarga y visibilidad
+   1. Durante la operación de descarga el usuario verá mensajes de log en pantalla describiendo cada paso (inicio, validación, transferencia, confirmación).
+   2. Los mismos logs quedan almacenados en el registro de la descarga para auditoría y troubleshooting.
+
+---
+
+### Reglas de negocio
+- Estado inicial de una descarga es **Pendiente de Facturar** salvo configuración indicando lo contrario.
+- El conteo de pendientes incluye solo descargas con estado Pendiente y con fecha dentro del periodo configurable (por defecto sin caducidad).
+- Administrador puede forzar la migración masiva de pendientes a Facturado mediante filtro.
+- Un usuario inactivo no puede iniciar sesión ni descargar.
+- Resetear contraseña se registra en auditoría y fuerza cambio obligatorio en el siguiente login.
+
+---
+
+### Modelo de datos esencial
+| Entidad | Campos clave |
+|---|---|
+| Usuario | id; nombre; email; rol; estado; password_hash; limite_pendientes; creado_por_admin; fecha_alta; ultimo_login |
+| Descarga | id; usuario_id; certificado_id; controlador_id; fecha; estado; logs; checksum; tamaño; ip_origen |
+| Certificado | id; nombre; controlador_id; metadata; archivo_referencia |
+| Auditoria | id; actor_id; accion; objetivo_tipo; objetivo_id; timestamp; ip; antes; despues |
+| Notificación | id; tipo; destinatario_id; estado_envio; fecha; payload |
+
+---
+
+### Seguridad y cumplimiento
+- Comunicaciones TLS obligatorio.
+- Almacenamiento de contraseñas con hashing fuerte (bcrypt/argon2).
+- Acceso por roles con control de permisos en backend.
+- Enmascarado de datos sensibles en logs; solo administradores con permiso pueden ver detalles extendidos.
+- Retención de auditoría configurable; no borrar registros sin autorización administrativa.
+
+---
+
+### Integración con sistema existente
+- Reutilizar la biblioteca/servicio que realiza la descarga actual como microservicio o módulo importable.
+- Exponer API backend REST/GraphQL que invoque la lógica de descarga y capture logs/respuestas.
+- Migración mínima de URLs públicas; proporcionar adaptador si cambia esquema.
+
+---
+
+### No funcionales y operativas
+- Aplicación web responsiva compatible con Chrome, Edge y Firefox.
+- Tiempo de respuesta para operaciones de UI < 2s en listados; descargas pueden ser asíncronas con progreso.
+- Escalabilidad para 10k usuarios y 100k descargas al mes.
+- Pruebas unitarias y e2e para flujos críticos; cobertura mínima 80% en lógica de negocio.
+- Backup diario de base de datos y retención de logs por 1 año.
+
+---
+
+### Entregables y criterios de aceptación
+- Documentación de arquitectura y diagramas de componentes.
+- API spec (OpenAPI) y contratos de integración con la lógica de descarga existente.
+- Implementación completa del backend y frontend según requisitos funcionales.
+- Scripts de migración si aplica y plan de despliegue.
+- Suite de pruebas automatizadas y plan de pruebas manuales.
+- Demo funcional donde: crear usuarios, setear límites, simular descargas, comprobar bloqueo por límite, ver auditoría y recibir emails de alerta.
+- Criterios de aceptación: todos los casos de uso descritos funcionan sin errores; auditoría verifica cambios; políticas de seguridad aplicadas; documentación entregada.
+
+---
+
+### Siguientes pasos recomendados
+- Inventario del código actual y puntos de integración de la lógica de descarga.
+- Definición del comportamiento por defecto para nuevas descargas (si Pendiente o Facturado).
+- Decidir si los límites son por usuario individual o por cuenta mayorista (se asumió por usuario en este requerimiento).
+- Preparar el entorno de pruebas con controladores fiscales simulados para validar logs y archivos.
+
+--- 
+
+Cuando quieras, genero el Markdown listo para pasar al agente de Visual Studio Code con la estructura de tickets y tareas técnicas para implementar esto en sprints.

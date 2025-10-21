@@ -1,0 +1,180 @@
+**Estructurando las tareas**
+
+Creo que lo mejor ser芍 tener unas seis secciones: Resumen, 谷picas e Historias, Requisitos T谷cnicos, Endpoints de la API, Modelo de Datos, Plan de Implementaci車n y Sprints. Necesito asegurarme de que sea breve pero completo, sin agregar frases extra. No debo hacer preguntas aclaratorias, solo organizar todo de manera clara. ?Vamos a producirlo!
+### Resumen ejecutivo
+Soluci車n web para gestionar y permitir la descarga de certificados para controladores fiscales con m迆ltiples perfiles, control de estados de descarga, l赤mites por usuario, auditor赤a y notificaciones. Entregable en formato de backlog t谷cnico listo para pasar al agente de Visual Studio Code.
+
+---
+
+### Epics y Historias de usuario
+#### Epic 1 Gesti車n de usuarios
+- Historia 1.1 Administrador crea usuarios mayorista y distribuidor con contrase?a inicial y l赤mite de descargas pendientes.  
+  - **Criterio de aceptaci車n**: administrador puede crear usuario con campos obligatorios y contrase?a inicial marcada para cambio obligatorio.
+- Historia 1.2 Administrador edita y elimina usuarios.  
+  - **Criterio de aceptaci車n**: cambios quedan registrados en auditor赤a.
+- Historia 1.3 Primer inicio de sesi車n obliga a cambiar contrase?a.  
+  - **Criterio de aceptaci車n**: usuario no puede continuar sin cambiar contrase?a.
+- Historia 1.4 Administrador resetea contrase?a y fuerza flujo de primer inicio.  
+  - **Criterio de aceptaci車n**: reseteo registrado y usuario obligado a cambiar en pr車ximo login.
+
+#### Epic 2 Gesti車n de descargas
+- Historia 2.1 Usuario descarga certificado y visualiza detalle y logs antes de confirmar.  
+  - **Criterio de aceptaci車n**: UI muestra nombre, controlador, fecha, tama?o, checksum y log de generaci車n; registro de descarga creado.
+- Historia 2.2 Estado de descarga Pendiente de Facturar o Facturado con cambio manual por admin.  
+  - **Criterio de aceptaci車n**: admin puede marcar una o varias descargas como Facturado.
+- Historia 2.3 Listado de certificados pendientes con filtros.  
+  - **Criterio de aceptaci車n**: export CSV/JSON del listado.
+
+#### Epic 3 L赤mite y bloqueo por pendientes
+- Historia 3.1 Configurar l赤mite por usuario y bloquear nuevas descargas cuando se supera.  
+  - **Criterio de aceptaci車n**: usuario no puede iniciar descarga si pendientes >= l赤mite; UI muestra contador y bloqueo.
+- Historia 3.2 Alertas por email al alcanzar 80% y 100% del l赤mite.  
+  - **Criterio de aceptaci車n**: emails enviados a administradores y log de env赤o registrado.
+
+#### Epic 4 Auditor赤a y trazabilidad
+- Historia 4.1 Registrar acciones administrativas en log inmutable.  
+  - **Criterio de aceptaci車n**: cada acci車n guarda actor, acci車n, objetivo, timestamp, IP, antes/despu谷s.
+- Historia 4.2 Visualizar historial de modificaciones filtrable por admin.  
+  - **Criterio de aceptaci車n**: interfaz con paginaci車n y export.
+
+#### Epic 5 Seguridad y operativa
+- Historia 5.1 Enmascarado de datos sensibles en logs y permisos de visualizaci車n.  
+  - **Criterio de aceptaci車n**: s車lo admins autorizados ven detalles extendidos.
+- Historia 5.2 Sesiones con expiraci車n y revocaci車n por admin.  
+  - **Criterio de aceptaci車n**: admin puede invalidar sesiones activas.
+
+---
+
+### Requisitos t谷cnicos y criterios de aceptaci車n
+- Autenticaci車n basada en JWT con refresh tokens y expiraci車n configurable.  
+- Pol赤tica de contrase?as: m赤nimo 10 caracteres con may迆scula, min迆scula, n迆mero y car芍cter especial.  
+- Hash de contrase?as con Argon2 o bcrypt.  
+- TLS obligatorio en todas las comunicaciones.  
+- Reutilizar m車dulo de descarga existente como servicio interno invocable por API.  
+- Registro de logs de descarga por cada paso y persistencia en DB para auditor赤a.  
+- Export CSV/JSON para listados usuarios y descargas.  
+- Cobertura de pruebas unitarias m赤nima 80% en l車gica de negocio.  
+- Escalabilidad inicial para 10k usuarios y 100k descargas/mes.  
+- Backups diarios y retenci車n de logs por 1 a?o.
+
+---
+
+### Especificaci車n de API resumen
+- Autenticaci車n
+  - POST /api/auth/login  Request { email, password } Response { accessToken, refreshToken, mustChangePassword }
+  - POST /api/auth/refresh  Request { refreshToken } Response { accessToken }
+  - POST /api/auth/change-password  Request { oldPassword, newPassword }
+
+- Usuarios
+  - GET /api/users  Roles admin only. Query params page, q, role
+  - POST /api/users  Crear usuario admin only Request { name, email, role, limitePendientes, passwordInitial }
+  - PUT /api/users/{id}  Editar usuario admin only
+  - DELETE /api/users/{id}  Eliminar usuario admin only
+  - POST /api/users/{id}/reset-password  Admin reset
+
+- Descargas
+  - GET /api/certificates  Listado p迆blico autenticado con filtros controllerId, estado, userId, dateFrom, dateTo
+  - GET /api/certificates/{id}  Detalle predescarga con metadata y logs parciales
+  - POST /api/downloads  Iniciar descarga Request { certificateId } Response { downloadId, status }
+  - GET /api/downloads/{id}/status  Progreso y logs
+  - PUT /api/downloads/{id}/state  Cambiar estado admin only Request { state }
+
+- Auditor赤a y notificaciones
+  - GET /api/audit  Admin only filtros tipoAccion, actorId, dateFrom, dateTo
+  - POST /api/notifications/test  Admin only
+
+Ejemplo de payload de descarga
+```json
+{
+  "certificateId": "uuid",
+  "userId": "uuid"
+}
+```
+
+---
+
+### Modelo de datos esencial con ejemplos SQL
+- Tabla users
+```sql
+CREATE TABLE users (
+  id UUID PRIMARY KEY,
+  name TEXT,
+  email TEXT UNIQUE,
+  role TEXT,
+  state TEXT,
+  password_hash TEXT,
+  limite_pendientes INT DEFAULT 0,
+  must_change_password BOOLEAN DEFAULT TRUE,
+  created_by UUID,
+  created_at TIMESTAMP,
+  updated_at TIMESTAMP
+);
+```
+- Tabla downloads
+```sql
+CREATE TABLE downloads (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  certificate_id UUID,
+  controlador_id UUID,
+  fecha TIMESTAMP,
+  estado TEXT,
+  logs JSONB,
+  checksum TEXT,
+  tama?o BIGINT,
+  ip_origen TEXT
+);
+```
+- Tabla audit
+```sql
+CREATE TABLE audit (
+  id UUID PRIMARY KEY,
+  actor_id UUID,
+  accion TEXT,
+  objetivo_tipo TEXT,
+  objetivo_id UUID,
+  timestamp TIMESTAMP,
+  ip TEXT,
+  antes JSONB,
+  despues JSONB
+);
+```
+
+---
+
+### Plan de implementaci車n y sprints t谷cnicos
+- Sprint 0 Preparaci車n
+  - Inventario del c車digo existente y puntos de integraci車n del m車dulo de descarga.
+  - Configuraci車n repositorio, CI, entornos dev/staging.
+  - Especificaci車n OpenAPI inicial.
+- Sprint 1 Autenticaci車n y gesti車n de usuarios
+  - Implementar auth JWT, endpoints users CRUD, flujo de primer cambio de contrase?a, pol赤ticas de password.
+  - Pruebas unitarias b芍sicas.
+- Sprint 2 Control de descargas y logs
+  - Integrar servicio de descarga existente, endpoints de descarga y status, persistencia de logs.
+  - UI pre-descarga con metadata y logs.
+- Sprint 3 L赤mite y bloqueo
+  - Implementar contador de pendientes, bloqueo en backend y mensajes en UI.
+  - Email alerts 80% y 100%.
+- Sprint 4 Auditor赤a y reportes
+  - Implementar tabla audit y endpoints, UI de auditor赤a, export CSV/JSON, listado pendientes.
+- Sprint 5 Hardening y QA
+  - Seguridad, tests e2e, performance, backups y despliegue.
+- Sprint 6 Demo y ajustes
+  - Preparar demo, correcciones seg迆n feedback y documentaci車n final.
+
+Tareas por historia deben transformarse a tickets peque?os con estimaciones de tarea, due?os y criterios de aceptaci車n.
+
+---
+
+### QA despliegue y checklist de aceptaci車n
+- Flujo de creaci車n de usuario, primer login y cambio de contrase?a validado.  
+- Flujo de descarga desde selecci車n hasta registro de logs y estado inicial.  
+- Bloqueo por l赤mite reproducible y emails generados al 80% y 100%.  
+- Auditor赤a muestra todas las modificaciones administrativas y export funciona.  
+- Pruebas de seguridad: inyecci車n, CSRF, autorizaci車n por rol.  
+- Smoke tests de integraci車n con m車dulo de descarga existente en entorno staging.
+
+---
+
+Entrega lista para copiar en Visual Studio Code agent como backlog t谷cnico, tickets y tareas. Si quer谷s, genero el conjunto de issues en formato Markdown por sprint con templates para cada ticket.
