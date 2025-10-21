@@ -125,7 +125,7 @@ build/
 .eslintcache
 
 # Keep logo files
-!public/LOGOsersa.png
+!public/LOGOSersa.png
 !public/favicon.ico
 !public/index.html
 !public/manifest.json
