@@ -33,6 +33,7 @@ import {
   History
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
+import logoSersa from './assets/LOGOSersa.png';
 
 const DRAWER_WIDTH = 240;
 
@@ -360,9 +361,9 @@ const Layout = ({ children, onLogout, user }) => {
             >
               <MenuIcon />
             </IconButton>
-          )}<Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+          )}          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
             <img 
-              src="/LOGOsersa.png" 
+              src={logoSersa} 
               alt="SERSA Logo" 
               style={{ 
                 height: '32px', 

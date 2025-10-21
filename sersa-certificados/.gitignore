@@ -124,6 +124,12 @@ public
 build/
 .eslintcache
 
+# Keep logo files
+!public/LOGOsersa.png
+!public/favicon.ico
+!public/index.html
+!public/manifest.json
+
 # IDE files
 .vscode/
 .idea/

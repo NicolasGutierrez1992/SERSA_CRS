@@ -35,6 +35,13 @@ app.use(cors({
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json()); // Middleware para parsear JSON en las solicitudes
+
+// Servir archivos estáticos del frontend si existe la carpeta build
+const frontendPath = path.join(__dirname, 'sersa-certificados', 'build');
+if (require('fs').existsSync(frontendPath)) {
+  app.use(express.static(frontendPath));
+}
+
 app.use('/auth', authRouter);
 app.use('/api', wscertRouter );
 app.use('/users', usersRouter);
